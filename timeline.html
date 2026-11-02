@@ -1,5 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Vital Signs of Medical AI</title>
+<!doctype html><html lang="en"><head><meta charset=utf8><meta name="description" content="Interactive 3D timeline of medical AI from 2022 to 2026, by Lucía Mora Díaz and team."><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Vital Signs of Medical AI — Lucía Mora</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -100,6 +100,15 @@ h3 { font-family: var(--display); font-size: 1.35rem; margin: 0 0 6px; }
 .sources { font-size: 14px; margin: 0; padding-left: 18px; }
 .sources li { margin-bottom: 4px; }
 
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: var(--mono); font-size: 13px; }
+.topbar a { text-decoration: none; color: var(--muted); }
+.topbar a:hover { color: var(--ink); }
+.topbar .tag { letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.about-artifact { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.about-artifact div { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; }
+.about-artifact h2 { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; font-weight: 500; }
+.about-artifact p { margin: 0; font-size: 15px; }
+@media (max-width: 720px) { .about-artifact { grid-template-columns: 1fr; } }
 @media (max-width: 860px) { .history { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 720px) {
   .chart-head, .reading, .notes { grid-template-columns: 1fr; }
@@ -109,6 +118,11 @@ h3 { font-family: var(--display); font-size: 1.35rem; margin: 0 0 6px; }
 </style>
 
 <div class="wrap">
+  <nav class="topbar" aria-label="Portfolio">
+    <a href="index.html">&larr; Back to portfolio</a>
+    <span class="tag">Artifact 01 &middot; AI Timeline</span>
+  </nav>
+
   <header class="chart-head">
     <div>
       <p class="eyebrow">Lead II &middot; 25 mm/s &middot; 10 mm/mV</p>
@@ -123,6 +137,12 @@ h3 { font-family: var(--display); font-size: 1.35rem; margin: 0 0 6px; }
       <span>Course</span><b>AIML-500, IWU</b>
     </div>
   </header>
+
+  <section class="about-artifact" aria-label="About this artifact">
+    <div><h2>Who it's for</h2><p>Healthcare and AI teams, and anyone who needs to understand how fast medical AI is moving, without a technical background.</p></div>
+    <div><h2>Why it matters</h2><p>Exam scores tell only half the story. This timeline puts performance next to ethical failures and regulation, so readers can see the risks along with the progress.</p></div>
+    <div><h2>What it shows about me</h2><p>I turn complex research into a clear, interactive experience: data storytelling, UX design, and accessibility (keyboard navigation, reduced motion, and a text version of every event).</p></div>
+  </section>
 
   <div class="legend" aria-label="Legend">
     <span><svg viewBox="0 0 34 16"><path d="M0 12h8l3-11 3 14 3-3h17" fill="none" stroke="var(--bench)" stroke-width="2"/></svg>Benchmark &middot; spike height = exam score</span>
