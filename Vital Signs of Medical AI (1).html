@@ -1,0 +1,546 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Vital Signs of Medical AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a 3D ECG strip (Lead II) floating in front of chart paper; the camera travels beat to beat through 2022–2026; flat background history and notes below */
+:root {
+  --paper: #fbf0f1;
+  --grid-minor: #f2d0d7;
+  --grid-major: #e4a3b1;
+  --trace: #3a1d22;
+  --ink: #2b1519;
+  --muted: #74575d;
+  --card: #fffafa;
+  --line: #ecc9cf;
+  --bench: #1d5aa8;
+  --ethics: #b3202c;
+  --reg: #2a7246;
+  --break: #6a3c9e;
+  --adopt: #b06a12;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Public Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1b1214; --grid-minor: #2d1d21; --grid-major: #4d2d34; --trace: #e9cfd4;
+    --ink: #f6e9eb; --muted: #bc9ca2; --card: #241719; --line: #3d272b;
+    --bench: #79aef0; --ethics: #f0707a; --reg: #6fc893; --break: #b493e6; --adopt: #e8a659;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1b1214; --grid-minor: #2d1d21; --grid-major: #4d2d34; --trace: #e9cfd4;
+  --ink: #f6e9eb; --muted: #bc9ca2; --card: #241719; --line: #3d272b;
+  --bench: #79aef0; --ethics: #f0707a; --reg: #6fc893; --break: #b493e6; --adopt: #e8a659;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+
+.chart-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 32px; align-items: end; border-bottom: 2px solid var(--trace); padding-bottom: 16px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.02; margin: 0; text-wrap: balance; letter-spacing: -0.015em; }
+.lede { margin: 10px 0 0; max-width: 62ch; color: var(--muted); }
+.patient { font-family: var(--mono); font-size: 12.5px; display: grid; grid-template-columns: auto auto; gap: 2px 14px; color: var(--muted); }
+.patient b { color: var(--ink); font-weight: 500; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend svg { width: 34px; height: 16px; flex: none; }
+
+.stage { position: relative; height: clamp(360px, 62vh, 580px); border: 1px solid var(--grid-major); border-radius: 6px; overflow: hidden; background: var(--paper); }
+.stage canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+.stage canvas:active { cursor: grabbing; }
+.stage .hud { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; pointer-events: none; }
+.stage .hud > * { pointer-events: auto; }
+.hint { font-family: var(--mono); font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 3px; padding: 4px 8px; }
+.fallback { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--muted); }
+
+.btns { display: flex; gap: 8px; }
+button { font: 500 13px var(--mono); color: var(--ink); background: var(--card); border: 1px solid var(--grid-major); border-radius: 3px; padding: 7px 12px; cursor: pointer; }
+button:hover:not(:disabled) { background: var(--grid-minor); }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, a:focus-visible, .log li:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+a { color: inherit; text-decoration-color: var(--grid-major); text-underline-offset: 3px; }
+
+.reading { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 20px 28px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 22px 24px; }
+.reading .when { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.reading .when strong { display: block; font-family: var(--display); font-size: 1.6rem; color: var(--ink); font-weight: 700; line-height: 1.1; margin-bottom: 8px; }
+.chip { display: inline-block; font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; border: 1px solid currentColor; }
+.reading h2 { font-family: var(--display); font-size: 1.45rem; margin: 0 0 6px; line-height: 1.2; text-wrap: balance; }
+.reading p { margin: 0; max-width: 65ch; }
+.reading .src { margin-top: 10px; font-size: 14px; }
+
+h3 { font-family: var(--display); font-size: 1.35rem; margin: 0 0 6px; }
+.sub { color: var(--muted); margin: 0 0 14px; max-width: 65ch; }
+.log { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line); }
+.log li { display: grid; grid-template-columns: 110px 14px minmax(0, 1fr); gap: 4px 14px; padding: 12px 6px; border-bottom: 1px solid var(--line); cursor: pointer; border-radius: 3px; }
+.log li:hover, .log li.sel { background: var(--grid-minor); }
+.log .d { font-family: var(--mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.log .sw { width: 10px; height: 10px; border-radius: 50%; margin-top: 8px; }
+.log .t { font-weight: 600; }
+.log .x { grid-column: 3; color: var(--muted); font-size: 15px; }
+
+.history { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.decade { border-top: 2px solid var(--grid-major); padding-top: 10px; min-width: 0; }
+.decade h4 { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 500; }
+.decade ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14.5px; }
+.decade b { font-family: var(--mono); font-weight: 500; font-size: 12.5px; color: var(--muted); display: block; }
+.decade .winter { border-left: 3px dashed var(--muted); padding-left: 8px; }
+.med { font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; color: var(--ethics); border: 1px solid currentColor; border-radius: 3px; padding: 0 4px; margin-left: 4px; }
+
+.notes { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 28px; }
+.notes section { min-width: 0; }
+.notes p { margin: 0 0 10px; max-width: 65ch; }
+.disclose { font-size: 14.5px; color: var(--muted); border-left: 2px solid var(--grid-major); padding-left: 14px; }
+.sources { font-size: 14px; margin: 0; padding-left: 18px; }
+.sources li { margin-bottom: 4px; }
+
+@media (max-width: 860px) { .history { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) {
+  .chart-head, .reading, .notes { grid-template-columns: 1fr; }
+  .log li { grid-template-columns: 84px 12px minmax(0, 1fr); gap: 2px 10px; }
+}
+@media (max-width: 480px) { .history { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap">
+  <header class="chart-head">
+    <div>
+      <p class="eyebrow">Lead II &middot; 25 mm/s &middot; 10 mm/mV</p>
+      <h1>Vital Signs of Medical AI</h1>
+      <p class="lede">Medical AI from 2022 to 2026, read as a heartbeat in 3D. Exam scores spike, ethical failures show up as arrhythmias, and regulation is the slow rhythm trying to keep pace. Click a beat, or drag to look around.</p>
+    </div>
+    <div class="patient">
+      <span>Patient</span><b>Medical AI</b>
+      <span>Born</span><b>1956, Dartmouth</b>
+      <span>Focus</span><b>Dec 2022 to now</b>
+      <span>Charted by</span><b>Lucia Mora, Hima Bindu Mavuri, Pujitha Ganimineni</b>
+      <span>Course</span><b>AIML-500, IWU</b>
+    </div>
+  </header>
+
+  <div class="legend" aria-label="Legend">
+    <span><svg viewBox="0 0 34 16"><path d="M0 12h8l3-11 3 14 3-3h17" fill="none" stroke="var(--bench)" stroke-width="2"/></svg>Benchmark &middot; spike height = exam score</span>
+    <span><svg viewBox="0 0 34 16"><path d="M0 8h6l3 6 3-7 3 9 3-14 3 8h13" fill="none" stroke="var(--ethics)" stroke-width="2"/></svg>Ethics &middot; arrhythmia</span>
+    <span><svg viewBox="0 0 34 16"><path d="M0 12h4c3-6 6-6 8 0h4c3-6 6-6 8 0h10" fill="none" stroke="var(--reg)" stroke-width="2"/></svg>Regulation &middot; slow wave</span>
+    <span><svg viewBox="0 0 34 16"><path d="M0 12h6l3-9 3 11 3-1 3-12 3 13h13" fill="none" stroke="var(--break)" stroke-width="2"/></svg>Breakthrough &middot; double beat</span>
+    <span><svg viewBox="0 0 34 16"><path d="M0 12h8l3-11 3 14 3-3h17" fill="none" stroke="var(--adopt)" stroke-width="2"/></svg>Adoption</span>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="hud">
+      <span class="hint">Drag to rotate &middot; scroll or pinch to zoom &middot; arrow keys step beats</span>
+      <div class="btns"><button type="button" id="prev">&larr; Previous beat</button><button type="button" id="next">Next beat &rarr;</button></div>
+    </div>
+  </div>
+
+  <article class="reading" id="reading" aria-live="polite"></article>
+
+  <section>
+    <h3>Chart log, 2022 to now</h3>
+    <p class="sub">Every beat on the strip, in order. Click one to fly to it.</p>
+    <ul class="log" id="log"></ul>
+  </section>
+
+  <section>
+    <h3>Patient history, 1950 to 2022</h3>
+    <p class="sub">The background before the focus period, including both AI winters. Medical milestones are marked.</p>
+    <div class="history">
+      <div class="decade"><h4>1950s–60s &middot; Birth</h4><ul>
+        <li><b>1950</b>Turing proposes the Turing Test.</li>
+        <li><b>1956</b>Dartmouth Conference names "artificial intelligence."</li>
+        <li><b>1958</b>Rosenblatt's Perceptron, an early neural network.</li>
+        <li><b>1959</b>Arthur Samuel coins "machine learning."</li>
+        <li><b>1964–66</b>ELIZA imitates a therapist.<span class="med">MED</span></li>
+        <li><b>1969</b><i>Perceptrons</i> shows the limits of simple neural networks.</li>
+      </ul></div>
+      <div class="decade"><h4>1970s–80s &middot; Winters</h4><ul>
+        <li><b>1972</b>MYCIN diagnoses blood infections, but never reaches hospitals.<span class="med">MED</span></li>
+        <li class="winter"><b>1974–1980</b>First AI winter: weak computers, failed promises, funding cut.</li>
+        <li><b>1980</b>Expert systems like XCON go commercial.</li>
+        <li><b>1986</b>Backpropagation makes deep networks trainable.</li>
+        <li class="winter"><b>1987–1993</b>Second AI winter: brittle expert systems, hardware market collapses.</li>
+      </ul></div>
+      <div class="decade"><h4>1990s–2000s &middot; Data</h4><ul>
+        <li><b>1997</b>Deep Blue beats Kasparov at chess.</li>
+        <li><b>1998</b>FDA approves R2 ImageChecker for mammograms.<span class="med">MED</span></li>
+        <li><b>2006</b>Hinton revives deep learning; AWS launches the cloud.</li>
+        <li><b>2009</b>ImageNet and GPU training arrive.</li>
+      </ul></div>
+      <div class="decade"><h4>2010s–2022 &middot; Boom</h4><ul>
+        <li><b>2012</b>AlexNet starts the deep learning era.</li>
+        <li><b>2013</b>IBM Watson for Oncology, later abandoned.<span class="med">MED</span></li>
+        <li><b>2017</b>Transformers introduced.</li>
+        <li><b>2018</b>FDA authorizes IDx-DR, the first autonomous diagnostic AI.<span class="med">MED</span></li>
+        <li><b>2019</b>Hospital algorithm found biased against Black patients.<span class="med">MED</span></li>
+        <li><b>2020</b>AlphaFold 2 solves protein structure prediction.<span class="med">MED</span></li>
+        <li><b>Nov 2022</b>ChatGPT launches.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <div class="notes">
+    <section>
+      <h3>Our reflection</h3>
+      <p>What stood out to us is how fast AI went from barely passing medical exams to beating doctors on hard cases, in just about three years. But the ethical events tell a different story. Passing a test isn't the same as treating a real patient safely, and cases like UnitedHealth show what happens when AI decisions replace human judgment.</p>
+      <p>Coming from UX, accessibility, and data backgrounds, we think the real question isn't how smart the AI is, but who it's designed for and who is accountable when it gets it wrong.</p>
+    </section>
+    <section>
+      <h3>Sources</h3>
+      <ol class="sources" id="sources"></ol>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const S = {
+  medpalm: ["Analytics India Mag, Med-PaLM 2", "https://analyticsindiamag.com/ai-news-updates/google-introduces-medpalm-2-a-gpt-4-like-model-for-healthcare"],
+  kung: ["Kung et al. (2023), PLOS Digital Health", "https://journals.plos.org/digitalhealth/article?id=10.1371/journal.pdig.0000198"],
+  medpalm2: ["BBC Science Focus, Med-PaLM 2", "https://www.sciencefocus.com/news/med-palm-2-google-ai"],
+  unh: ["WCPO, UnitedHealth lawsuit", "https://www.wcpo.com/unitedhealth-sued-for-allegedly-using-ai-to-deny-elderly-patients-care"],
+  who: ["WHO (2024), guidance on large multi-modal models", "https://www.who.int/publications/i/item/9789240084759"],
+  euai: ["EU AI Act, Regulation (EU) 2024/1689", "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"],
+  nobel: ["Nobel Prize in Chemistry 2024", "https://www.nobelprize.org/prizes/chemistry/2024/summary/"],
+  msft: ["Microsoft AI, The Path to Medical Superintelligence", "https://microsoft.ai/news/the-path-to-medical-superintelligence/"],
+  mobi: ["MobiHealthNews, MAI-DxO study", "https://www.mobihealthnews.com/news/microsoft-ai-diagnoses-complex-medical-cases-85-accuracy-study-finds"],
+  il: ["Illinois IDFPR, AI therapy law", "https://idfpr.illinois.gov/content/soi/idfpr/en/news/2025/gov-pritzker-signs-state-leg-prohibiting-ai-therapy-in-il.html"],
+  stat: ["STAT News, FDA's clinical AI pivot", "https://www.statnews.com/2026/01/15/medical-ai-safety-research-fda-cds/"],
+  axios: ["Axios, FDA evaluating AI like doctors", "https://www.axios.com/2026/08/18/fda-doctor-ai-medical-devices-review"],
+  intu: ["IntuitionLabs, FDA AI device list", "https://intuitionlabs.ai/articles/fda-approved-ai-medical-devices-list"]
+};
+
+const EV = [
+  { date: "Dec 2022", title: "Google's Med-PaLM", type: "benchmark", score: 60, text: "Google Research and DeepMind's medical language model scores above 60% on U.S. medical licensing-style questions, roughly a passing mark.", src: ["medpalm"] },
+  { date: "Feb 2023", title: "ChatGPT and the USMLE", type: "benchmark", score: 60, text: "A study finds ChatGPT performs at or near the passing threshold on the U.S. medical licensing exam without any special medical training.", src: ["kung"] },
+  { date: "Mar–May 2023", title: "Med-PaLM 2 reaches expert level", type: "benchmark", score: 85.4, text: "Med-PaLM 2 scores 85.4% on USMLE-style questions, comparable to an expert. Google itself warns that real-world use must be explored responsibly.", src: ["medpalm2"] },
+  { date: "Nov 2023", title: "UnitedHealth nH Predict lawsuit", type: "ethics", text: "A class action alleges UnitedHealth used an AI model with a 90% error rate on appeal to deny elderly Medicare Advantage patients care their doctors said they needed. The company says the tool is only a guide.", src: ["unh"] },
+  { date: "Jan 2024", title: "WHO guidance on health AI", type: "ethics", text: "The World Health Organization publishes guidance on generative AI in healthcare, warning about bias, misinformation, and unclear accountability.", src: ["who"] },
+  { date: "Aug 2024", title: "EU AI Act takes effect", type: "regulation", text: "The world's first broad AI law enters into force and classifies most medical AI as \"high-risk,\" with stricter requirements.", src: ["euai"] },
+  { date: "Oct 2024", title: "Nobel Prize for AlphaFold", type: "breakthrough", text: "Demis Hassabis and John Jumper of Google DeepMind share the Nobel Prize in Chemistry with David Baker for AI-driven protein structure prediction and design, a major step for drug discovery.", src: ["nobel"] },
+  { date: "Jun 2025", title: "Microsoft MAI-DxO", type: "benchmark", score: 85.5, text: "Microsoft's diagnostic orchestrator, paired with OpenAI's o3, solves 85.5% of 304 hard NEJM cases while experienced physicians average 20%. The cases were rare teaching cases, not everyday patients.", src: ["msft", "mobi"] },
+  { date: "Aug 2025", title: "Illinois bans AI therapy", type: "ethics", text: "Illinois prohibits AI from making mental health treatment decisions, allowing it only for administrative support. Violations can cost $10,000 each.", src: ["il"] },
+  { date: "Jan 2026", title: "FDA loosens the rules", type: "regulation", text: "Updated FDA guidance lets many AI diagnostic-suggestion tools reach clinics without FDA review. Utah starts a pilot of autonomous AI prescription refills.", src: ["stat"] },
+  { date: "Aug 2026", title: "Testing AI like doctors", type: "regulation", text: "The FDA proposes a competency-based approach that would evaluate generative AI medical devices the way doctors are evaluated.", src: ["axios"] },
+  { date: "Sep 2026", title: "More than 1,600 AI devices", type: "adoption", text: "The FDA's list of AI-enabled medical devices reaches 1,614 entries, with radiology making up about three quarters of them.", src: ["intu"] }
+];
+
+const TYPE = {
+  benchmark: { label: "Benchmark", color: "--bench" },
+  ethics: { label: "Ethics", color: "--ethics" },
+  regulation: { label: "Regulation", color: "--reg" },
+  breakthrough: { label: "Breakthrough", color: "--break" },
+  adoption: { label: "Adoption", color: "--adopt" }
+};
+
+/* Beat shapes in strip pixels: [dx, dy], dy negative = up; m = marker point */
+function shape(e) {
+  switch (e.type) {
+    case "benchmark": { const h = e.score * 1.2; return { pts: [[0,0],[8,-6],[16,0],[22,0],[26,6],[32,-h],[38,14],[44,0],[54,0],[62,-10],[72,0]], m: 5 }; }
+    case "ethics": return { pts: [[0,0],[6,-5],[10,4],[16,-10],[22,0],[28,46],[34,-54],[40,32],[48,-8],[56,8],[64,0],[72,0]], m: 6 };
+    case "regulation": return { pts: [[0,0],[6,-8],[12,-16],[20,-8],[26,0],[34,0],[40,-8],[46,-16],[54,-8],[60,0],[72,0]], m: 2 };
+    case "breakthrough": return { pts: [[0,0],[10,0],[16,-72],[22,10],[30,0],[36,-96],[42,12],[50,0],[60,-8],[72,0]], m: 5 };
+    default: return { pts: [[0,0],[8,-6],[16,0],[22,0],[26,6],[32,-70],[38,14],[44,0],[54,0],[62,-10],[72,0]], m: 5 };
+  }
+}
+
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let sel = 0;
+let scene3d = null;
+
+function link(k) { const [n, u] = S[k]; return `<a href="${u}" target="_blank" rel="noopener">${n}</a>`; }
+
+function select(i) {
+  sel = Math.max(0, Math.min(EV.length - 1, i));
+  const e = EV[sel], t = TYPE[e.type];
+  document.querySelectorAll(".log li").forEach(li => li.classList.toggle("sel", +li.dataset.i === sel));
+  document.getElementById("reading").innerHTML = `
+    <div class="when"><strong>${e.date}</strong><span class="chip" style="color:var(${t.color})">${t.label}</span>${e.score ? `<div style="margin-top:10px">Score: <b style="color:var(--ink)">${e.score}%</b></div>` : ""}<div style="margin-top:10px">Beat ${sel + 1} of ${EV.length}</div></div>
+    <div><h2>${e.title}</h2><p>${e.text}</p>${e.src ? `<p class="src">Source: ${e.src.map(link).join(" &middot; ")}</p>` : ""}</div>`;
+  document.getElementById("prev").disabled = sel === 0;
+  document.getElementById("next").disabled = sel === EV.length - 1;
+  if (scene3d) scene3d.focus(sel);
+}
+
+function buildLists() {
+  const ul = document.getElementById("log");
+  EV.forEach((e, i) => {
+    const li = document.createElement("li");
+    li.dataset.i = i; li.tabIndex = 0;
+    li.innerHTML = `<span class="d">${e.date}</span><span class="sw" style="background:var(${TYPE[e.type].color})"></span><span class="t">${e.title}</span><span class="x">${e.text}</span>`;
+    li.addEventListener("click", () => { select(i); document.getElementById("stage").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" }); });
+    li.addEventListener("keydown", ev => { if (ev.key === "Enter") li.click(); });
+    ul.appendChild(li);
+  });
+  const src = document.getElementById("sources");
+  Object.keys(S).forEach(k => { const li = document.createElement("li"); li.innerHTML = link(k); src.appendChild(li); });
+}
+
+function build3D() {
+  const stage = document.getElementById("stage");
+  let renderer;
+  try {
+    if (!window.THREE) throw new Error("no three");
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  } catch (err) {
+    const f = document.createElement("div");
+    f.className = "fallback";
+    f.textContent = "The 3D strip needs WebGL, which this browser has turned off. Every event is listed in the chart log below.";
+    stage.prepend(f);
+    return null;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  stage.prepend(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 4;
+  controls.maxDistance = 20;
+  controls.maxPolarAngle = Math.PI * 0.6;
+  controls.minPolarAngle = Math.PI * 0.2;
+  controls.minAzimuthAngle = -Math.PI * 0.42;
+  controls.maxAzimuthAngle = Math.PI * 0.42;
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x886066, 0.85));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+  dir.position.set(4, 8, 6);
+  scene.add(dir);
+
+  // geometry along x: pixels -> units
+  const PX = 1 / 18, PY = 1 / 25, LEAD = 1.6;
+  let x = -1.5;
+  const all = [new THREE.Vector3(x, 0, 0)];
+  const beats = [];
+  EV.forEach((e, i) => {
+    x += LEAD;
+    all.push(new THREE.Vector3(x, 0, 0));
+    const s = shape(e);
+    const pts = s.pts.map(([dx, dy]) => new THREE.Vector3(x + dx * PX, -dy * PY, 0));
+    pts.slice(1).forEach(p => all.push(p));
+    beats.push({ i, e, pts, marker: pts[s.m].clone() });
+    x = pts[pts.length - 1].x;
+  });
+  x += 2;
+  all.push(new THREE.Vector3(x, 0, 0));
+  const W = x + 1.5;
+  const midX = W / 2 - 1.5;
+
+  function polyPath(points) {
+    const path = new THREE.CurvePath();
+    for (let k = 0; k < points.length - 1; k++) path.add(new THREE.LineCurve3(points[k], points[k + 1]));
+    return path;
+  }
+
+  // chart paper wall + floor
+  const paperCanvas = document.createElement("canvas");
+  paperCanvas.width = paperCanvas.height = 200;
+  const paperTex = new THREE.CanvasTexture(paperCanvas);
+  paperTex.wrapS = paperTex.wrapT = THREE.RepeatWrapping;
+  paperTex.anisotropy = 4;
+  function drawPaper() {
+    const c = paperCanvas.getContext("2d");
+    c.fillStyle = tok("--paper"); c.fillRect(0, 0, 200, 200);
+    c.strokeStyle = tok("--grid-minor"); c.lineWidth = 2;
+    for (let k = 1; k < 5; k++) { c.beginPath(); c.moveTo(k * 40, 0); c.lineTo(k * 40, 200); c.moveTo(0, k * 40); c.lineTo(200, k * 40); c.stroke(); }
+    c.strokeStyle = tok("--grid-major"); c.lineWidth = 4;
+    c.strokeRect(0, 0, 200, 200);
+    paperTex.needsUpdate = true;
+  }
+  drawPaper();
+  const wallTex = paperTex.clone(); wallTex.repeat.set(W + 10, 10); wallTex.needsUpdate = true;
+  const floorTex = paperTex.clone(); floorTex.repeat.set(W + 10, 8); floorTex.needsUpdate = true;
+  const wallMat = new THREE.MeshBasicMaterial({ map: wallTex });
+  const floorMat = new THREE.MeshBasicMaterial({ map: floorTex, transparent: true, opacity: 0.75 });
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(W + 10, 10), wallMat);
+  wall.position.set(midX, 1.5, -1.2);
+  scene.add(wall);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(W + 10, 8), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(midX, -3.2, 2.8);
+  scene.add(floor);
+
+  // base trace
+  const baseMat = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.05 });
+  const basePath = polyPath(all);
+  scene.add(new THREE.Mesh(new THREE.TubeGeometry(basePath, all.length * 14, 0.035, 8, false), baseMat));
+
+  // colored beats, markers, labels
+  const pickables = [];
+  const beatMats = [];
+  const labelSprites = [];
+  function makeLabel(text, colorVar, h, weight) {
+    const c = document.createElement("canvas");
+    const fs = 56;
+    const ctx = c.getContext("2d");
+    ctx.font = `${weight || 500} ${fs}px "IBM Plex Mono", monospace`;
+    c.width = Math.ceil(ctx.measureText(text).width) + 24; c.height = fs + 24;
+    const tex = new THREE.CanvasTexture(c);
+    const draw = () => {
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.font = `${weight || 500} ${fs}px "IBM Plex Mono", monospace`;
+      ctx.fillStyle = tok(colorVar);
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, 12, c.height / 2);
+      tex.needsUpdate = true;
+    };
+    draw();
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+    sp.scale.set(h * c.width / c.height, h, 1);
+    labelSprites.push(draw);
+    return sp;
+  }
+
+  beats.forEach(b => {
+    const cv = TYPE[b.e.type].color;
+    const mat = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.05, emissiveIntensity: 0.35 });
+    beatMats.push({ mat, cv });
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(polyPath(b.pts), b.pts.length * 40, 0.075, 10, false), mat));
+
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.17, 24, 16), mat);
+    dot.position.copy(b.marker);
+    scene.add(dot);
+    b.dot = dot;
+    const hit = new THREE.Mesh(new THREE.SphereGeometry(0.75, 8, 6), new THREE.MeshBasicMaterial({ visible: false }));
+    hit.position.copy(b.marker); hit.userData.i = b.i;
+    scene.add(hit); pickables.push(hit);
+
+    const guideGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(b.marker.x, -2.6, 0), new THREE.Vector3(b.marker.x, b.marker.y, 0)]);
+    const guide = new THREE.Line(guideGeo, new THREE.LineDashedMaterial({ dashSize: 0.12, gapSize: 0.1, transparent: true, opacity: 0 }));
+    guide.computeLineDistances();
+    scene.add(guide);
+    b.guide = guide;
+    beatMats.push({ mat: guide.material, cv, line: true });
+
+    const dl = makeLabel(b.e.date, "--ink", 0.32);
+    dl.position.set(b.marker.x, -2.85, 0.2);
+    scene.add(dl);
+    if (b.e.score) {
+      const sl = makeLabel(b.e.score + "%", cv, 0.36, 500);
+      sl.position.set(b.marker.x + 0.75, b.marker.y + 0.2, 0.1);
+      scene.add(sl);
+    }
+  });
+  const yrs = [["2022", -1.2], ["2023", null], ["2024", null], ["2025", null], ["2026", null]];
+  // year headers above first beat of each year
+  const seen = {};
+  beats.forEach(b => {
+    const y = b.e.date.slice(-4);
+    if (!seen[y]) { seen[y] = 1; const l = makeLabel(y, "--muted", 0.42, 500); l.position.set(b.pts[0].x - 0.6, 5.0, -1.1); scene.add(l); }
+  });
+
+  // traveling pulse
+  const pulse = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 12), new THREE.MeshBasicMaterial());
+  scene.add(pulse);
+  let pt = 0;
+
+  function applyTheme() {
+    scene.background = new THREE.Color(tok("--paper"));
+    baseMat.color.set(tok("--trace"));
+    pulse.material.color.set(tok("--trace"));
+    beatMats.forEach(({ mat, cv, line }) => { mat.color.set(tok(cv)); if (!line) mat.emissive.set(tok(cv)); });
+    drawPaper(); wallTex.image = paperCanvas; floorTex.image = paperCanvas; wallTex.needsUpdate = floorTex.needsUpdate = true;
+    labelSprites.forEach(d => d());
+  }
+  applyTheme();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  document.fonts && document.fonts.ready.then(() => labelSprites.forEach(d => d()));
+
+  // camera flight
+  const start = new THREE.Vector3(beats[0].marker.x + 1.5, 1.2, 0);
+  controls.target.copy(start);
+  camera.position.set(start.x - 3.2, start.y + 2.4, 8.2);
+  let fly = null;
+  function focus(i) {
+    const b = beats[i];
+    beats.forEach(o => { o.guide.material.opacity = o === b ? 0.9 : 0; o.dot.scale.setScalar(1); });
+    const to = new THREE.Vector3(b.marker.x, Math.max(0.6, b.marker.y * 0.5 + 0.4), 0);
+    if (reduced) { const d = to.clone().sub(controls.target); controls.target.add(d); camera.position.add(d); fly = null; }
+    else fly = { from: controls.target.clone(), to, t: 0 };
+    scene3d.current = b;
+  }
+
+  // picking
+  const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+  let downAt = null;
+  function pick(ev) {
+    const r = renderer.domElement.getBoundingClientRect();
+    mouse.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(mouse, camera);
+    const hit = ray.intersectObjects(pickables)[0];
+    return hit ? hit.object.userData.i : null;
+  }
+  renderer.domElement.addEventListener("pointerdown", ev => { downAt = [ev.clientX, ev.clientY]; });
+  renderer.domElement.addEventListener("pointerup", ev => {
+    if (!downAt) return;
+    const moved = Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]);
+    downAt = null;
+    if (moved < 6) { const i = pick(ev); if (i !== null) select(i); }
+  });
+  renderer.domElement.addEventListener("pointermove", ev => {
+    if (ev.buttons) return;
+    renderer.domElement.style.cursor = pick(ev) !== null ? "pointer" : "grab";
+  });
+
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.fov = w < 560 ? 55 : 42;
+    camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(stage);
+  resize();
+
+  const clock = new THREE.Clock();
+  function tick() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    if (fly) {
+      fly.t = Math.min(1, fly.t + dt * 1.6);
+      const e = fly.t < 0.5 ? 2 * fly.t * fly.t : 1 - Math.pow(-2 * fly.t + 2, 2) / 2;
+      const p = fly.from.clone().lerp(fly.to, e);
+      camera.position.add(p.clone().sub(controls.target));
+      controls.target.copy(p);
+      if (fly.t >= 1) fly = null;
+    }
+    if (!reduced) {
+      pt = (pt + dt * 0.035) % 1;
+      pulse.position.copy(basePath.getPointAt(pt));
+      if (scene3d.current) scene3d.current.dot.scale.setScalar(1.35 + 0.25 * Math.max(0, Math.sin(clock.elapsedTime * 5.5)));
+    } else {
+      pulse.visible = false;
+      if (scene3d.current) scene3d.current.dot.scale.setScalar(1.5);
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  scene3d = { focus, current: null };
+  requestAnimationFrame(tick);
+  return scene3d;
+}
+
+document.getElementById("prev").onclick = () => select(sel - 1);
+document.getElementById("next").onclick = () => select(sel + 1);
+document.addEventListener("keydown", ev => {
+  if (ev.target.closest && ev.target.closest("input,textarea,button,a")) return;
+  if (ev.key === "ArrowRight") { ev.preventDefault(); select(sel + 1); }
+  if (ev.key === "ArrowLeft") { ev.preventDefault(); select(sel - 1); }
+});
+
+buildLists();
+build3D();
+select(0);
+</script>
+
+</body></html>
