@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning vs. Deep Learning: Two Real-World Stories</title>
+<style>
+:root{--ink:#1d1b3a;--muted:#5b5878;--bg:#faf7ff;--card:#ffffff;--purple:#6c4bd6;--teal:#0f7f72;--coral:#c8432c;--sun:#ffb938;--line:#e4dff5}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+header{padding:64px 24px 44px;text-align:center;background:linear-gradient(135deg,var(--purple),#0f9d8a);color:#fff}
+header h1{margin:0 0 12px;font-size:clamp(28px,5vw,46px);line-height:1.15}
+header p{margin:0 auto;max-width:640px;font-size:18px;opacity:.95}
+.by{font-size:14px;opacity:.85;margin-top:16px}
+main{max-width:960px;margin:0 auto;padding:24px}
+section{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;margin:24px 0;box-shadow:0 6px 24px rgba(40,30,90,.06)}
+h2{margin:0 0 6px;font-size:26px}
+h3{margin:18px 0 6px;font-size:17px}
+.tag{display:inline-block;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:10px;color:#fff}
+.ml{background:var(--teal)} .dl{background:var(--coral)}
+.sub{color:var(--muted);margin:0 0 16px}
+.grid{display:grid;gap:24px;grid-template-columns:1fr 1fr}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+button{font:inherit;cursor:pointer;border:none;border-radius:10px;padding:10px 16px;background:var(--ink);color:#fff;font-weight:600}
+button:hover{opacity:.9}
+button:disabled{opacity:.5;cursor:default}
+button[aria-pressed="false"]{background:#eeeaf8;color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.rule{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer}
+.rule input{margin-top:5px;width:18px;height:18px;flex:none}
+.rule .pts{margin-left:auto;font-weight:700;white-space:nowrap;padding-left:8px}
+.bar{position:relative;height:28px;background:#efeafc;border-radius:999px;overflow:hidden;margin:16px 0 4px}
+.fill{height:100%;width:0;background:var(--teal);transition:width .35s,background .35s}
+.fill.spam{background:var(--coral)}
+.threshold{position:absolute;top:0;bottom:0;left:62.5%;border-left:3px dashed var(--ink)}
+.scale{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.verdict{font-size:20px;font-weight:700;margin-top:12px}
+.note{font-size:14px;color:var(--muted);margin-top:8px}
+canvas{display:block;width:100%;max-width:320px;margin:0 auto;border-radius:14px;background:#120f2b}
+.stage{perspective:900px;height:300px;display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none}
+.stack-inner{position:relative;width:250px;height:290px;transform-style:preserve-3d;transform:rotateX(-18deg) rotateY(-28deg);transition:transform .25s}
+.layer{position:absolute;left:50%;top:50%;width:230px;height:150px;margin:-75px 0 0 -115px;cursor:pointer;backface-visibility:hidden;border-radius:14px;color:#fff;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px 12px;border:2px solid rgba(255,255,255,.7);opacity:.93}
+.layer small{font-weight:400;font-size:12px;opacity:.95;margin-top:4px}
+.hint{text-align:center;font-size:13px;color:var(--muted);margin:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+@media(max-width:600px){.stats{grid-template-columns:1fr}}
+.stat{background:#f6f3ff;border-radius:14px;padding:14px;text-align:center}
+.stat b{display:block;font-size:26px;color:var(--purple)}
+.stat span{font-size:13px;color:var(--muted)}
+.result{min-height:48px;margin-top:12px;font-size:16px}
+.toggle{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.modeText{background:#f6f3ff;border-radius:14px;padding:18px;min-height:96px;margin:0}
+ol.steps{padding-left:20px;margin:8px 0}
+ol.steps li{margin-bottom:6px}
+.conclusion{background:linear-gradient(135deg,#f1ecff,#e6f7f4);border-radius:18px;padding:28px;margin:24px 0}
+.refs{font-size:14px;color:var(--muted)}
+.refs p{margin:0 0 10px}
+.refs a{color:var(--purple)}
+footer{text-align:center;color:var(--muted);font-size:14px;padding:24px 0 48px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Machine Learning vs. Deep Learning:<br>Two Real-World Stories</h1>
+  <p>Both teach computers to learn from data. The difference is who decides what to look for: a person, or the network itself.</p>
+  <div class="by">By Lucia Mora · November 2026</div>
+</header>
+
+<main>
+
+  <section aria-labelledby="intro-h">
+    <h2 id="intro-h">Start here: the one-sentence difference</h2>
+    <p class="sub">Traditional machine learning: a person picks the clues, and the algorithm figures out how much each clue matters. Deep learning: a many-layer neural network finds the clues on its own from raw data.</p>
+    <p>Below, you can play with one real system from each side. The demos are simplified toys built to show the idea, not the real software.</p>
+  </section>
+
+  <!-- ============ EXAMPLE 1: SPAM ============ -->
+  <section aria-labelledby="spam-h">
+    <span class="tag ml">Example 1 · Machine learning</span>
+    <h2 id="spam-h">Is this email spam?</h2>
+    <p class="sub">The real tool is Apache SpamAssassin. It checks each email against rules written by people. Each rule adds or subtracts points, and at 5.0 the email is marked as spam.</p>
+
+    <div class="presets">
+      <button type="button" data-preset="spam">Load a spammy email</button>
+      <button type="button" data-preset="mixed">Load a borderline email</button>
+      <button type="button" data-preset="coworker">Load an email from a coworker</button>
+      <button type="button" data-preset="clear">Clear all</button>
+    </div>
+
+    <div id="rules"></div>
+
+    <div class="bar" aria-hidden="true">
+      <div class="fill" id="fill"></div>
+      <div class="threshold" title="Spam threshold: 5.0"></div>
+    </div>
+    <div class="scale"><span>0</span><span>Spam threshold: 5.0</span><span>8</span></div>
+
+    <p class="verdict" id="verdict" aria-live="polite"></p>
+    <p class="note" id="score"></p>
+
+    <h3>Why machine learning fits here</h3>
+    <ul>
+      <li>We already know what spam looks like, so experts can list the signals.</li>
+      <li>It works with a fairly small inbox and runs fast on a regular server.</li>
+      <li>It's easy to explain. If a real customer gets blocked, an admin can see exactly which rule fired and adjust that one.</li>
+    </ul>
+    <p class="note">Deep learning would need far more labeled emails and computing power for this job. It makes sense for giant providers like Gmail, but for a typical mail server it adds cost without much benefit.</p>
+  </section>
+
+  <!-- ============ EXAMPLE 2: EYE SCAN ============ -->
+  <section aria-labelledby="dl-h">
+    <span class="tag dl">Example 2 · Deep learning</span>
+    <h2 id="dl-h">Can a computer read an eye scan?</h2>
+    <p class="sub">LumineticsCore (formerly IDx-DR) screens people with diabetes for diabetic retinopathy, an eye disease that can lead to blindness. A convolutional neural network (CNN) learns the signs directly from the pixels.</p>
+
+    <div class="grid">
+      <div>
+        <h3>Scan a (simulated) retina</h3>
+        <canvas id="retina" width="320" height="320" role="img" aria-label="Simulated retina scan"></canvas>
+        <p style="text-align:center;margin:14px 0 0"><button type="button" id="scanBtn">Run the scan</button></p>
+        <p class="result" id="scanResult" aria-live="polite">Press the button to scan. The line sweeps across, and any spots it finds light up.</p>
+      </div>
+
+      <div>
+        <h3>Inside the network (drag me)</h3>
+        <div class="stage" id="stage">
+          <div class="stack-inner" id="stackInner">
+            <div class="layer" style="background:#6c4bd6">Raw pixels<small>the photo, as numbers</small></div>
+            <div class="layer" style="background:#3d6fd9">Edges &amp; shapes<small>first simple patterns</small></div>
+            <div class="layer" style="background:#0f7f72">Tiny spots &amp; bleeds<small>the disease signs</small></div>
+            <div class="layer" style="background:#c8432c">Diagnosis<small>disease present or not</small></div>
+          </div>
+        </div>
+        <div class="presets" style="justify-content:center;align-items:center"><button type="button" id="prevCard">← Previous card</button><span id="cardCount" class="note" style="margin:0 6px">Card 1 of 4</span><button type="button" id="nextCard">Next card →</button></div>
+        <p class="hint">Click a card, or use the buttons, to turn the stack. The card facing you explains its job.</p>
+        <p class="result" id="layerInfo" aria-live="polite">Click a layer to see what it does.</p>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>900</b><span>patients in the clinical trial</span></div>
+      <div class="stat"><b>87.2%</b><span>of people with the disease caught</span></div>
+      <div class="stat"><b>90.7%</b><span>of people without it correctly cleared</span></div>
+    </div>
+
+    <h3>Why deep learning fits here</h3>
+    <ol class="steps">
+      <li>The input is a raw image, and the early signs are tiny spots that can appear anywhere in the eye.</li>
+      <li>It would be very hard for a person to describe those signs precisely enough for a simpler algorithm.</li>
+      <li>The network learns them from thousands of images that eye specialists have already graded.</li>
+      <li>A missed case could mean someone loses their vision, so the accuracy deep learning can reach matters.</li>
+    </ol>
+    <p class="note">The FDA authorized this system in 2018 as the first AI system that can give a diagnosis without a doctor reading the image.</p>
+  </section>
+
+  <!-- ============ COMPARISON ============ -->
+  <section aria-labelledby="cmp-h">
+    <h2 id="cmp-h">The big difference: who finds the clues?</h2>
+    <p class="sub">Switch between the two approaches.</p>
+    <div class="toggle" role="group" aria-label="Choose an approach">
+      <button type="button" id="btnMl" aria-pressed="true" data-mode="ml">Traditional machine learning</button>
+      <button type="button" id="btnDl" aria-pressed="false" data-mode="dl">Deep learning</button>
+    </div>
+    <p class="modeText" id="modeText"></p>
+  </section>
+
+  <!-- ============ CONCLUSION ============ -->
+  <div class="conclusion">
+    <h2>Conclusion</h2>
+    <p>Neither approach is simply better. When the features are already known, the data is limited, and people need to understand the decisions, as with spam filtering, traditional machine learning is the practical choice.</p>
+    <p>When the data is raw and complex, like medical images, and there is plenty of labeled data to learn from, deep learning is the better tool for the job.</p>
+  </div>
+
+  <section class="refs" aria-labelledby="refs-h">
+    <h2 id="refs-h" style="font-size:20px">References</h2>
+    <p>Abràmoff, M. D., Lavin, P. T., Birch, M., Shah, N., &amp; Folk, J. C. (2018). Pivotal trial of an autonomous AI-based diagnostic system for detection of diabetic retinopathy in primary care offices. <i>npj Digital Medicine, 1</i>, Article 39. <a href="https://doi.org/10.1038/s41746-018-0040-6">https://doi.org/10.1038/s41746-018-0040-6</a></p>
+    <p>Digital Diagnostics. (2018). The FDA just opened the door to let AI make medical decisions on its own. <a href="https://www.digitaldiagnostics.com/the-fda-just-opened-the-door-to-let-ai-make-medical-decisions-on-its-own/">https://www.digitaldiagnostics.com/the-fda-just-opened-the-door-to-let-ai-make-medical-decisions-on-its-own/</a></p>
+    <p>Seewald, A. K. (2004). Combining Bayesian and rule score learning: Automated tuning for SpamAssassin (Technical Report TR-2004-11). Austrian Research Institute for Artificial Intelligence. <a href="https://ofai.at/papers/oefai-tr-2004-11.pdf">https://ofai.at/papers/oefai-tr-2004-11.pdf</a></p>
+  </section>
+
+</main>
+
+<footer>Built as a portfolio piece · Lucia Mora</footer>
+
+<script>
+/* ---------- Spam score demo ---------- */
+const rules = [
+  {id:'r1', text:'Suspicious phrase: "You\'ve won free money!"', pts:2.0},
+  {id:'r2', text:'Contains a link to a known spam site', pts:2.5},
+  {id:'r3', text:'Sender fails the authentication check', pts:1.5},
+  {id:'r4', text:'Subject is in ALL CAPS with "!!!"', pts:1.0},
+  {id:'r5', text:'Sender is in the company address book (trusted)', pts:-2.0}
+];
+const presets = {
+  spam:     ['r1','r2','r3','r4'],
+  mixed:    ['r1','r3'],
+  coworker: ['r5'],
+  clear:    []
+};
+const rulesBox = document.getElementById('rules');
+rules.forEach(r => {
+  const label = document.createElement('label');
+  label.className = 'rule';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.id = r.id;
+  input.addEventListener('change', updateSpam);
+  const span = document.createElement('span');
+  span.textContent = r.text;
+  const pts = document.createElement('span');
+  pts.className = 'pts';
+  pts.textContent = (r.pts > 0 ? '+' : '') + r.pts.toFixed(1);
+  label.append(input, span, pts);
+  rulesBox.appendChild(label);
+});
+
+function updateSpam(){
+  let score = 0;
+  const hits = [];
+  rules.forEach(r => {
+    if (document.getElementById(r.id).checked) { score += r.pts; hits.push(r.text); }
+  });
+  const shown = Math.max(0, score);
+  const fill = document.getElementById('fill');
+  fill.style.width = (Math.min(shown / 8, 1) * 100) + '%';
+  const isSpam = score >= 5;
+  fill.classList.toggle('spam', isSpam);
+  document.getElementById('verdict').textContent = isSpam
+    ? '🚩 Marked as spam'
+    : '✅ Delivered to the inbox';
+  document.getElementById('score').textContent =
+    'Score: ' + shown.toFixed(1) + ' (spam at 5.0 or higher). ' +
+    (hits.length ? hits.length + ' rule(s) fired.' : 'No rules fired.');
+}
+
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const on = presets[btn.dataset.preset];
+    rules.forEach(r => { document.getElementById(r.id).checked = on.includes(r.id); });
+    updateSpam();
+  });
+});
+updateSpam();
+
+/* ---------- Retina scan demo (simulated) ---------- */
+const cv = document.getElementById('retina');
+const cx = cv.getContext('2d');
+let spots = [];
+let sweepX = null;
+let anim = null;
+
+function drawEye(){
+  cx.clearRect(0, 0, 320, 320);
+  cx.beginPath();
+  cx.arc(160, 160, 150, 0, Math.PI * 2);
+  cx.fillStyle = '#2a1f5c';
+  cx.fill();
+  cx.fillStyle = '#5a4ca8';
+  for (let x = 30; x <= 290; x += 14) {
+    for (let y = 30; y <= 290; y += 14) {
+      const dx = x - 160, dy = y - 160;
+      if (dx * dx + dy * dy < 140 * 140) cx.fillRect(x, y, 2, 2);
+    }
+  }
+  spots.forEach(s => {
+    if (sweepX === null || s.x <= sweepX) {
+      cx.beginPath();
+      cx.arc(s.x, s.y, 7, 0, Math.PI * 2);
+      cx.fillStyle = '#ff6b5b';
+      cx.shadowColor = '#ff6b5b';
+      cx.shadowBlur = 12;
+      cx.fill();
+      cx.shadowBlur = 0;
+    }
+  });
+  if (sweepX !== null) {
+    cx.beginPath();
+    cx.moveTo(sweepX, 10);
+    cx.lineTo(sweepX, 310);
+    cx.strokeStyle = 'rgba(120,255,220,0.9)';
+    cx.lineWidth = 3;
+    cx.stroke();
+  }
+}
+
+function scan(){
+  if (anim) cancelAnimationFrame(anim);
+  const hasDisease = Math.random() < 0.5;
+  spots = [];
+  if (hasDisease) {
+    const n = 3 + Math.floor(Math.random() * 4);
+    while (spots.length < n) {
+      const a = Math.random() * Math.PI * 2;
+      const r = Math.random() * 105;
+      spots.push({ x: 160 + Math.cos(a) * r, y: 160 + Math.sin(a) * r });
+    }
+  }
+  const btn = document.getElementById('scanBtn');
+  const result = document.getElementById('scanResult');
+  btn.disabled = true;
+  result.textContent = 'Scanning…';
+  const start = performance.now();
+  const DUR = 2200;
+  function step(now){
+    const p = Math.min((now - start) / DUR, 1);
+    sweepX = 30 + p * 260;
+    drawEye();
+    if (p < 1) {
+      anim = requestAnimationFrame(step);
+    } else {
+      sweepX = null;
+      drawEye();
+      btn.disabled = false;
+      result.innerHTML = hasDisease
+        ? '<strong>Spots found.</strong> The model reports that disease is present and would refer this patient for care.'
+        : '<strong>No spots found.</strong> The model reports no sign of disease.';
+    }
+  }
+  anim = requestAnimationFrame(step);
+}
+document.getElementById('scanBtn').addEventListener('click', scan);
+drawEye();
+
+/* ---------- 3D stack: mouse rotation ---------- */
+const stage = document.getElementById('stage');
+const stackInner = document.getElementById('stackInner');
+stage.addEventListener('mousemove', e => {
+  const r = stage.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width - 0.5;
+  const y = (e.clientY - r.top) / r.height - 0.5;
+  
+});
+stage.addEventListener('mouseleave', () => {
+  
+});
+
+/* ---------- Layer explanations ---------- */
+const layerTexts = [
+  'Layer 1, raw pixels: the photo as plain numbers. Nothing is labeled yet; the network just sees colors and brightness.',
+  'Layer 2, edges and shapes: the first layer picks up simple patterns like lines and curves from the pixels.',
+  'Layer 3, tiny spots and bleeds: it combines the shapes into the actual signs of the disease.',
+  'Layer 4, diagnosis: it turns those signs into one answer, disease present or not.'
+];
+const ringLayers = document.querySelectorAll('.layer');
+const RADIUS = 175;
+let ringIndex = 0;
+function showLayer(i){
+  ringIndex = i;
+  ringLayers.forEach((el, j) => {
+    el.style.transform = `rotateY(${j * 90}deg) translateZ(${RADIUS}px)`;
+  });
+  stackInner.style.transform = `rotateX(-8deg) rotateY(${-i * 90}deg)`;
+  document.getElementById('layerInfo').textContent = layerTexts[i];
+  document.getElementById('cardCount').textContent = 'Card ' + (i + 1) + ' of 4';
+}
+ringLayers.forEach((el, i) => el.addEventListener('click', () => showLayer(i)));
+document.getElementById('prevCard').addEventListener('click', () => showLayer((ringIndex + 3) % 4));
+document.getElementById('nextCard').addEventListener('click', () => showLayer((ringIndex + 1) % 4));
+showLayer(0);
+
+/* ---------- Compare toggle ---------- */
+const modeText = document.getElementById('modeText');
+const modes = {
+  ml: 'A person writes the clues (words, links, sender details), and the algorithm only learns how much each clue counts. It works with small data, runs fast, and is easy to explain.',
+  dl: 'The network receives raw pixels and learns its own clues across many layers. It needs thousands of labeled examples and more computing power, but it can catch patterns too subtle to describe by hand.'
+};
+function setMode(mode){
+  modeText.textContent = modes[mode];
+  document.getElementById('btnMl').setAttribute('aria-pressed', mode === 'ml');
+  document.getElementById('btnDl').setAttribute('aria-pressed', mode === 'dl');
+}
+document.getElementById('btnMl').addEventListener('click', () => setMode('ml'));
+document.getElementById('btnDl').addEventListener('click', () => setMode('dl'));
+setMode('ml');
+</script>
+</body>
+</html>
